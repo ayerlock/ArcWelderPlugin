@@ -143,12 +143,9 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 		char cur_char = *p_gcode;
 		if (cur_char == '\0' || cur_char == ';')
 			break;
-		else if (cur_char > 32 || (cur_char == ' ' && has_seen_character))
+		else if (cur_char > 0 || (cur_char == ' ' && has_seen_character))
 		{
-			if (cur_char >= 'a' && cur_char <= 'z')
-				command.gcode.push_back(cur_char - 32);
-			else
-				command.gcode.push_back(cur_char);
+			command.gcode.push_back(cur_char);
 			has_seen_character = true;
 		}
 		p_gcode++;
@@ -259,18 +256,14 @@ bool gcode_parser::try_extract_gcode_command(char ** p_p_gcode, std::string * p_
 	{
 
 	}
-	// Deal with case sensitivity
-	if (*p >= 'a' && *p <= 'z')
-		gcode_word = *p - 32;
-	else
-		gcode_word = *p;
-	if (gcode_word == 'G' || gcode_word == 'M' || gcode_word == 'T')
+	gcode_word = *p;
+	if (gcode_word == 'G' || gcode_word == 'M' || gcode_word == 'T' || gcode_word == 'g' || gcode_word == 'm' || gcode_word == 't')
 	{
 		// Set the gcode word of the new command to the current pointer's location and increment both
 		(*p_command).push_back(gcode_word);
 		p++;
 
-		if (gcode_word != 'T')
+		if (gcode_word != 'T' && gcode_word != 't')
 		{
 			// the T command is special, it has no address
 
@@ -328,14 +321,10 @@ bool gcode_parser::try_extract_gcode_command(char ** p_p_gcode, std::string * p_
 			}
 			// create a char to hold the t parameter
 			char t_param = '\0';
-			// 
-			if (*p_t >= 'a' && *p_t <= 'z')
-				t_param = *p_t - 32;
-			else
-				t_param = *p_t;
+			t_param = *p_t;
 
 
-			if (t_param == 'C' || t_param == 'X' || t_param == '?')
+			if (t_param == 'C' || t_param == 'X' || t_param == '?' || t_param == 'c' || t_param == 'x')
 			{
 				p_t++;
 				// The next letter looks good!  Now see if there are any other characters before the end of the line (excluding comments)
@@ -366,10 +355,7 @@ bool gcode_parser::try_extract_at_command(char ** p_p_gcode, std::string * p_com
 		{
 			found_command = true;
 		}
-		if (*p >= 'a' && *p <= 'z')
-			(*p_command).push_back(*p++ - 32);
-		else
-			(*p_command).push_back(*p++);
+		(*p_command).push_back(*p++);
 		
 	}
 	*p_p_gcode = p;
@@ -517,14 +503,7 @@ bool gcode_parser::try_extract_octolapse_parameter(char ** p_p_gcode, parsed_com
 			has_found_parameter = true;
 		}
 
-		if (*p >= 'a' && *p <= 'z')
-		{
-			p_parameter->name.push_back(*p++ - 32);
-		}
-		else
-		{
-			p_parameter->name.push_back(*p++);
-		}
+		p_parameter->name.push_back(*p++);
 	}
 	// Todo: Handle any otolapse commands require a string parameter
 	/*
@@ -564,10 +543,7 @@ bool gcode_parser::try_extract_parameter(char ** p_p_gcode, parsed_command_param
 		p++;
 	}
 	
-	// Deal with case sensitivity
-	if (*p >= 'a' && *p <= 'z')
-		parameter->name = *p++ - 32;
-	else if (*p >= 'A' && *p <= 'Z')
+	if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z'))
 		parameter->name = *p++;
 	else
 		return false;
